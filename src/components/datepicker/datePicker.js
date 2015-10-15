@@ -585,7 +585,7 @@
   DatePickerCtrl.prototype.focusCalendar = function() {
     // Use a timeout in order to allow the calendar to be rendered, as it is gated behind an ng-if.
     var self = this;
-    this.$mdUtil.nextTick(function() {
+    self.$mdUtil.nextTick(function() {
       self.getCalendarCtrl().focus();
     }, false);
   };

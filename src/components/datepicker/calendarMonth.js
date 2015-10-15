@@ -13,7 +13,7 @@
    */
   function mdCalendarMonthDirective() {
     return {
-      require: ['^^mdCalendar', 'mdCalendarMonth'],
+      require: ['^mdCalendarMonthView', 'mdCalendarMonth'],
       scope: {offset: '=mdMonthOffset'},
       controller: CalendarMonthCtrl,
       controllerAs: 'mdMonthCtrl',

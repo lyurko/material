@@ -6,7 +6,7 @@ describe('md-calendar', function() {
       NOV = 10, DEC = 11;
 
   var ngElement, element, scope, pageScope, controller, $material, $compile, $$rAF;
-  var $rootScope, dateLocale, $mdUtil, keyCodes, dateUtil;
+  var $rootScope, dateLocale, $mdUtil, keyCodes, dateUtil, monthViewController;
 
   // List of calendar elements added to the DOM so we can remove them after every test.
   var attachedCalendarElements = [];
@@ -21,8 +21,8 @@ describe('md-calendar', function() {
 
     // Internally, the calendar sets scrollTop to scroll to the month for a change.
     // The handler for that scroll won't be invoked unless we manually trigger it.
-    if (controller) {
-      angular.element(controller.calendarScroller).triggerHandler('scroll');
+    if (monthViewController) {
+      angular.element(monthViewController.calendarScroller).triggerHandler('scroll');
     }
   }
 
@@ -97,7 +97,7 @@ describe('md-calendar', function() {
   function dispatchKeyEvent(keyCode, opt_modifiers) {
     var mod = opt_modifiers || {};
 
-    angular.element(controller.$element).triggerHandler({
+    angular.element(monthViewController.$element).triggerHandler({
       type: 'keydown',
       keyCode: keyCode,
       which: keyCode,
@@ -154,6 +154,7 @@ describe('md-calendar', function() {
     element = ngElement[0];
     scope = ngElement.isolateScope();
     controller = ngElement.controller('mdCalendar');
+    monthViewController = ngElement.find('md-calendar-month-view').controller('mdCalendarMonthView');
   }));
 
   afterEach(function() {
@@ -410,7 +411,7 @@ describe('md-calendar', function() {
 
       dispatchKeyEvent(keyCodes.ENTER);
       applyDateChange();
-      expect(controller.selectedDate).toBeSameDayAs(new Date(2014, MAR, 1));
+      expect(monthViewController.selectedDate).toBeSameDayAs(new Date(2014, MAR, 1));
     });
 
     it('should restrict date navigation to min/max dates', function() {
@@ -467,15 +468,15 @@ describe('md-calendar', function() {
     var earlierDate = new Date(2014, FEB, 11);
     var laterDate = new Date(2014, MAR, 11);
 
-    controller.changeDisplayDate(earlierDate);
-    expect(controller.displayDate).toBeSameDayAs(earlierDate);
+    monthViewController.changeDisplayDate(earlierDate);
+    expect(monthViewController.displayDate).toBeSameDayAs(earlierDate);
 
-    controller.changeDisplayDate(laterDate);
-    expect(controller.displayDate).toBeSameDayAs(earlierDate);
+    monthViewController.changeDisplayDate(laterDate);
+    expect(monthViewController.displayDate).toBeSameDayAs(earlierDate);
 
     $material.flushOutstandingAnimations();
-    controller.changeDisplayDate(laterDate);
-    expect(controller.displayDate).toBeSameDayAs(laterDate);
+    monthViewController.changeDisplayDate(laterDate);
+    expect(monthViewController.displayDate).toBeSameDayAs(laterDate);
   });
 
   it('should not render any months before the min date', function() {
