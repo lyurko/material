@@ -606,7 +606,8 @@
   DatePickerCtrl.prototype.handleBodyClick = function(event) {
     if (this.isCalendarOpen) {
       // TODO(jelbourn): way want to also include the md-datepicker itself in this check.
-      var isInCalendar = this.$mdUtil.getClosest(event.target, 'md-calendar');
+      var isInCalendar = this.$mdUtil.getClosest(event.target, 'md-calendar-year-view') ||
+          this.$mdUtil.getClosest(event.target, 'md-calendar-month-view');
       if (!isInCalendar) {
         this.closeCalendarPane();
       }

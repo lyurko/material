@@ -18,9 +18,11 @@
       getWeekOfMonth: getWeekOfMonth,
       incrementDays: incrementDays,
       incrementMonths: incrementMonths,
+      incrementYears: incrementYears,
       getLastDateOfMonth: getLastDateOfMonth,
       isSameDay: isSameDay,
       getMonthDistance: getMonthDistance,
+      getYearDistance: getYearDistance,
       isValidDate: isValidDate,
       setDateTimeToMidnight: setDateTimeToMidnight,
       createDateAtMidnight: createDateAtMidnight,
@@ -157,6 +159,30 @@
       }
 
       return dateInTargetMonth;
+    }
+
+    /**
+     * Gets a new date incremented by the given number of years. Number of years can be negative.
+     * See `incrementMonths` for notes on overflow for specific dates.
+     * @param {Date} date
+     * @param {number} numberOfYears
+     * @returns {Date}
+     */
+    function incrementYears(date, numberOfYears) {
+      return incrementMonths(date, numberOfYears * 12);
+    }
+
+    /**
+     * Get the integer distance between two years. This *only* considers the year portion of the
+     * Date instances.
+     *
+     * @param {Date} start
+     * @param {Date} end
+     * @returns {number} Number of months between `start` and `end`. If `end` is before `start`
+     *     chronologically, this number will be negative.
+     */
+    function getYearDistance(start, end) {
+      return end.getFullYear() - start.getFullYear();
     }
 
     /**

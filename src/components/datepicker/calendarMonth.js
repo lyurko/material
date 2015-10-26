@@ -153,13 +153,13 @@
   CalendarMonthCtrl.prototype.isDateEnabled = function(opt_date) {
     return this.dateUtil.isDateWithinRange(opt_date, 
           this.calendarCtrl.minDate, this.calendarCtrl.maxDate) && 
-          (!angular.isFunction(this.calendarCtrl.dateFilter)
-           || this.calendarCtrl.dateFilter(opt_date));
-  }
+          (!angular.isFunction(this.calendarCtrl.calendarCtrl.dateFilter)
+           || this.calendarCtrl.calendarCtrl.dateFilter(opt_date));
+  };
   
   /**
    * Builds a `tr` element for the calendar grid.
-   * @param rowNumber The week number within the month.
+   * @param rowNumber {number} The week number within the month.
    * @returns {HTMLElement}
    */
   CalendarMonthCtrl.prototype.buildDateRow = function(rowNumber) {
@@ -209,11 +209,19 @@
       monthLabelCell.classList.add('md-calendar-month-label-disabled');
     }
     monthLabelCell.textContent = this.dateLocale.monthHeaderFormatter(date);
-    if (firstDayOfTheWeek <= 2) {
-      monthLabelCell.setAttribute('colspan', '7');
+    monthLabelCell.setAttribute('colspan', '2');
+    monthLabelCell.setAttribute('data-timestamp', firstDayOfMonth.getTime());
+    monthLabelCell.addEventListener('click', this.calendarCtrl.labelClickHandler);
 
+    var i;
+    if (firstDayOfTheWeek <= 2) {
       var monthLabelRow = this.buildDateRow();
       monthLabelRow.appendChild(monthLabelCell);
+
+      // Populate the rest of the row with blank cells.
+      for (i = 0; i < 5; i++) {
+        monthLabelRow.appendChild(this.buildDateCell());
+      }
       monthBody.insertBefore(monthLabelRow, row);
 
       if (isFinalMonth) {
@@ -228,7 +236,7 @@
     // Add a blank cell for each day of the week that occurs before the first of the month.
     // For example, if the first day of the month is a Tuesday, add blank cells for Sun and Mon.
     // The blankCellOffset is needed in cases where the first N cells are used by the month label.
-    for (var i = blankCellOffset; i < firstDayOfTheWeek; i++) {
+    for (i = blankCellOffset; i < firstDayOfTheWeek; i++) {
       row.appendChild(this.buildDateCell());
     }
 
@@ -265,7 +273,7 @@
     // requires that all items have exactly the same height.
     while (monthBody.childNodes.length < 6) {
       var whitespaceRow = this.buildDateRow();
-      for (var i = 0; i < 7; i++) {
+      for (i = 0; i < 7; i++) {
         whitespaceRow.appendChild(this.buildDateCell());
       }
       monthBody.appendChild(whitespaceRow);

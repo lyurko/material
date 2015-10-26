@@ -115,29 +115,6 @@ describe('md-calendar', function() {
   beforeEach(module('material.components.datepicker', 'ngAnimateMock'));
 
   beforeEach(inject(function($injector) {
-    jasmine.addMatchers({
-      toBeSameDayAs: function() {
-        return {
-          compare: function(actual, expected) {
-            var results = {
-              pass: dateUtil.isSameDay(actual, expected)
-            };
-
-            var negation = !results.pass ? '' : 'not ';
-
-            results.message = [
-              'Expected',
-              actual,
-              negation + 'to be the same day as',
-              expected
-            ].join(' ');
-
-            return results;
-          }
-        };
-      }
-    });
-
     $material = $injector.get('$material');
     $compile = $injector.get('$compile');
     $rootScope = $injector.get('$rootScope');

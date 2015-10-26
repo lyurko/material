@@ -43,8 +43,14 @@
   function calendarDirective() {
     return {
       template:
-          '<md-calendar-month-view md-min-date="ctrl.minDate" md-max-date="ctrl.maxDate">' +
-          '</md-calendar-month-view>',
+        '<md-calendar-month-view ng-if="ctrl.isMonthViewActive" ' +
+            'md-min-date="ctrl.minDate" md-max-date="ctrl.maxDate" ' +
+            'md-focus-date="ctrl.focusDate">' +
+        '</md-calendar-month-view>' +
+        '<md-calendar-year-view ng-if="!ctrl.isMonthViewActive" ' +
+            'md-min-date="ctrl.minDate" md-max-date="ctrl.maxDate" ' +
+            'md-focus-date="ctrl.focusDate">' +
+        '</md-calendar-year-view>',
       scope: {
         minDate: '=mdMinDate',
         maxDate: '=mdMaxDate',
@@ -63,7 +69,7 @@
    * Controller for the mdCalendar component.
    * @ngInject @constructor
    */
-  function CalendarCtrl($element, $mdTheming, $scope, $mdUtil, $mdConstant, $$mdDateUtil) {
+  function CalendarCtrl($element, $mdTheming, $scope, $mdUtil, $mdConstant, $$mdDateUtil, $compile) {
     $mdTheming($element);
 
     /** @final {!angular.JQLite} */
@@ -83,6 +89,14 @@
 
     /** @final {Date} */
     this.today = $$mdDateUtil.createDateAtMidnight();
+
+    /**
+     * Determines whether the calendar is in month view mode.
+     * @type {boolean}
+     */
+    this.isMonthViewActive = true;
+
+    this.$compile = $compile;
 
     this.attachCalendarEventListeners();
   }
@@ -219,6 +233,12 @@
     this.$scope.$emit('md-calendar-change', date);
     this.ngModelCtrl.$setViewValue(date);
     this.ngModelCtrl.$render();
+  };
+
+  CalendarCtrl.prototype.setMonthView = function(date) {
+    var self = this;
+    self.isMonthViewActive = true;
+    self.focusDate = date;
   };
 
   /**

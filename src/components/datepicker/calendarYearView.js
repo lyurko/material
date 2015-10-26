@@ -3,34 +3,26 @@
 
 
   angular.module('material.components.datepicker')
-      .directive('mdCalendarMonthView', mdCalendarMonthViewDirective);
+      .directive('mdCalendarYearView', mdCalendarYearViewDirective);
 
   /**
-   * Height of one calendar month tbody. This must be made known to the virtual-repeat and is
-   * subsequently used for scrolling to specific months.
+   * Height of one calendar year tbody. This must be made known to the virtual-repeat and is
+   * subsequently used for scrolling to specific years.
    */
-  var TBODY_HEIGHT = 265;
-
-  /**
-   * Height of a calendar month with a single row. This is needed to calculate the offset for
-   * rendering an extra month in virtual-repeat that only contains one row.
-   */
-  var TBODY_SINGLE_ROW_HEIGHT = 45;
+  var TBODY_HEIGHT = 88;
 
   /**
    * Private directive consumed by md-calendar. TODO: Update this.
    */
-  function mdCalendarMonthViewDirective() {
+  function mdCalendarYearViewDirective() {
     return {
       template: 
-          '<table aria-hidden="true" class="md-calendar-day-header"><thead></thead></table>' +
           '<div class="md-calendar-scroll-mask">' +
-            '<md-virtual-repeat-container class="md-calendar-scroll-container" ' +
-                'md-offset-size="' + (TBODY_SINGLE_ROW_HEIGHT - TBODY_HEIGHT) + '">' +
+            '<md-virtual-repeat-container class="md-calendar-scroll-container">' +
               '<table role="grid" tabindex="0" class="md-calendar" aria-readonly="true">' +
-                '<tbody role="rowgroup" md-virtual-repeat="i in ctrl.items" md-calendar-month ' +
-                    'md-month-offset="$index" class="md-calendar-month" ' +
-                    'md-start-index="ctrl.getFocusedMonthIndex()" ' +
+                '<tbody role="rowgroup" md-virtual-repeat="i in ctrl.items" md-calendar-year ' +
+                    'md-year-offset="$index" class="md-calendar-year" ' +
+                    'md-start-index="ctrl.getFocusedYearIndex()" ' +
                     'md-item-size="' + TBODY_HEIGHT + '"></tbody>' +
               '</table>' +
             '</md-virtual-repeat-container>' +
@@ -43,9 +35,9 @@
       require: [
         '^ngModel',
         '^mdCalendar',
-        'mdCalendarMonthView'
+        'mdCalendarYearView'
       ],
-      controller: CalendarMonthViewCtrl,
+      controller: CalendarYearViewCtrl,
       controllerAs: 'ctrl',
       bindToController: true,
       link: function(scope, element, attrs, controllers) {
@@ -71,23 +63,21 @@
    * Controller for the mdCalendar component.
    * @ngInject @constructor
    */
-  function CalendarMonthViewCtrl($element, $attrs, $scope, $animate, $q, $mdConstant,
+  function CalendarYearViewCtrl($element, $attrs, $scope, $animate, $q, $mdConstant,
       $mdTheming, $$mdDateUtil, $mdDateLocale, $mdInkRipple, $mdUtil) {
     $mdTheming($element);
     /**
      * Dummy array-like object for virtual-repeat to iterate over. The length is the total
-     * number of months that can be viewed. This is shorter than ideal because of (potential)
+     * number of years that can be viewed. This is shorter than ideal because of (potential)
      * Firefox bug https://bugzilla.mozilla.org/show_bug.cgi?id=1181658.
      */
-    this.items = {length: 2000};
+    this.items = {length: 400};
 
     if (this.maxDate && this.minDate) {
-      // Limit the number of months if min and max dates are set.
-      var numMonths = $$mdDateUtil.getMonthDistance(this.minDate, this.maxDate) + 1;
-      numMonths = Math.max(numMonths, 1);
-      // Add an additional month as the final dummy month for rendering purposes.
-      numMonths += 1;
-      this.items.length = numMonths;
+      // Limit the number of years if min and max dates are set.
+      var numYears = $$mdDateUtil.getYearDistance(this.minDate, this.maxDate) + 1;
+      this.items.length = Math.max(numYears, 1);
+      console.log(this.items.length);
     }
 
     /** @final {!angular.$animate} */
@@ -130,16 +120,14 @@
      * The first renderable date in the virtual-scrolling calendar.
      * @type {Date}
      */
-    this.firstRenderableDate = this.dateUtil.incrementMonths(this.today, -this.items.length / 2);
+    this.firstRenderableDate = this.dateUtil.incrementYears(this.today, - (this.items.length / 2));
 
     if (this.minDate && this.minDate > this.firstRenderableDate) {
       this.firstRenderableDate = this.minDate;
     } else if (this.maxDate) {
-      // Calculate the difference between the start date and max date.
-      // Subtract 1 because it's an inclusive difference and 1 for the final dummy month.
-      //
-      var monthDifference = this.items.length - 2;
-      this.firstRenderableDate = this.dateUtil.incrementMonths(this.maxDate, -(this.items.length - 2));
+      // Calculate the year difference between the start date and max date.
+      // Subtract 1 because it's an inclusive difference.
+      this.firstRenderableDate = this.dateUtil.incrementMonths(this.maxDate, - (this.items.length - 1));
     }
 
 
@@ -195,23 +183,7 @@
       if (this.hasAttribute('data-timestamp')) {
         $scope.$apply(function() {
           var timestamp = Number(cellElement.getAttribute('data-timestamp'));
-          self.setNgModelValue(self.dateUtil.createDateAtMidnight(timestamp));
-        });
-      }
-    };
-
-    /**
-     * Handles a click event on a label cell by switching the calendar to the year view.
-     * Created here so that every label can use the same function instance.
-     * @this {HTMLTableCellElement} The label that was clicked.
-     */
-    this.labelClickHandler = function() {
-      var cellElement = this;
-      if (cellElement.hasAttribute('data-timestamp')) {
-        $scope.$apply(function() {
-          var timestamp = Number(cellElement.getAttribute('data-timestamp'));
-          self.calendarCtrl.focusDate = self.dateUtil.createDateAtMidnight(timestamp);
-          self.calendarCtrl.isMonthViewActive = false;
+          self.calendarCtrl.setMonthView(self.dateUtil.createDateAtMidnight(timestamp));
         });
       }
     };
@@ -226,14 +198,13 @@
    * Sets up the controller's reference to ngModelController.
    * @param {!angular.NgModelController} ngModelCtrl
    */
-  CalendarMonthViewCtrl.prototype.configureNgModel = function(ngModelCtrl) {
+  CalendarYearViewCtrl.prototype.configureNgModel = function(ngModelCtrl) {
     this.ngModelCtrl = ngModelCtrl;
 
     var self = this;
     ngModelCtrl.$render = function() {
       self.changeSelectedDate(self.ngModelCtrl.$viewValue, true);
     };
-
     if (ngModelCtrl.$viewValue) {
       self.selectedDate = ngModelCtrl.$viewValue;
       self.changeFocusDate(self.focusDate);
@@ -244,9 +215,10 @@
    * Initialize the calendar by building the months that are initially visible.
    * Initialization should occur after the ngModel value is known.
    */
-  CalendarMonthViewCtrl.prototype.buildInitialCalendarDisplay = function() {
-    this.buildWeekHeader();
+  CalendarYearViewCtrl.prototype.buildInitialCalendarDisplay = function() {
     this.hideVerticalScrollbar();
+
+    this.displayDate = this.selectedDate || this.today;
     this.isInitialized = true;
   };
 
@@ -257,15 +229,15 @@
    *
    * This will cause a reflow.
    */
-  CalendarMonthViewCtrl.prototype.hideVerticalScrollbar = function() {
+  CalendarYearViewCtrl.prototype.hideVerticalScrollbar = function() {
     var element = this.$element[0];
 
     var scrollMask = element.querySelector('.md-calendar-scroll-mask');
     var scroller = this.calendarScroller;
 
-    var headerWidth = element.querySelector('.md-calendar-day-header').clientWidth;
     var scrollbarWidth = scroller.offsetWidth - scroller.clientWidth;
 
+    var headerWidth = 340; // TODO(chenmike): Hardcoded for now.
     scrollMask.style.width = headerWidth + 'px';
     scroller.style.width = (headerWidth + scrollbarWidth) + 'px';
     scroller.style.paddingRight = scrollbarWidth + 'px';
@@ -273,7 +245,7 @@
 
 
   /** Attach event listeners for the calendar. */
-  CalendarMonthViewCtrl.prototype.attachCalendarEventListeners = function() {
+  CalendarYearViewCtrl.prototype.attachCalendarEventListeners = function() {
     // Keyboard interaction.
     this.$element.on('keydown', angular.bind(this, this.handleKeyEvent));
   };
@@ -285,7 +257,7 @@
    * be to select the focused date or to navigate to focus a new date.
    * @param {KeyboardEvent} event
    */
-  CalendarMonthViewCtrl.prototype.handleKeyEvent = function(event) {
+  CalendarYearViewCtrl.prototype.handleKeyEvent = function(event) {
     var self = this;
     this.$scope.$apply(function() {
       // Capture escape and emit back up so that a wrapping component
@@ -322,7 +294,7 @@
     });
   };
 
-  CalendarMonthViewCtrl.prototype.changeFocusDate = function(date) {
+  CalendarYearViewCtrl.prototype.changeFocusDate = function(date) {
     var self = this;
     self.changeDisplayDate(date).then(function () {
       self.focus(date);
@@ -334,7 +306,7 @@
    * @param {KeyboardEvent} event
    * @returns {Date} Date to navigate to, or null if the key does not match a calendar shortcut.
    */
-  CalendarMonthViewCtrl.prototype.getFocusDateFromKeyEvent = function(event) {
+  CalendarYearViewCtrl.prototype.getFocusDateFromKeyEvent = function(event) {
     var dateUtil = this.dateUtil;
     var keyCode = this.keyCode;
 
@@ -361,8 +333,8 @@
    * Gets the "index" of the currently selected date as it would be in the virtual-repeat.
    * @returns {number}
    */
-  CalendarMonthViewCtrl.prototype.getFocusedMonthIndex = function() {
-    return this.dateUtil.getMonthDistance(this.firstRenderableDate,
+  CalendarYearViewCtrl.prototype.getFocusedYearIndex = function() {
+    return this.dateUtil.getYearDistance(this.firstRenderableDate,
         this.focusDate || this.selectedDate || this.today);
   };
 
@@ -370,7 +342,7 @@
    * Scrolls to the month of the given date.
    * @param {Date} date
    */
-  CalendarMonthViewCtrl.prototype.scrollToMonth = function(date) {
+  CalendarYearViewCtrl.prototype.scrollToMonth = function(date) {
     if (!this.dateUtil.isValidDate(date)) {
       return;
     }
@@ -383,7 +355,7 @@
    * Sets the ng-model value for the calendar and emits a change event from the parent controller.
    * @param {Date} date
    */
-  CalendarMonthViewCtrl.prototype.setNgModelValue = function(date) {
+  CalendarYearViewCtrl.prototype.setNgModelValue = function(date) {
     this.calendarCtrl.$scope.$emit('md-calendar-change', date);
     this.ngModelCtrl.$setViewValue(date);
     this.ngModelCtrl.$render();
@@ -393,7 +365,8 @@
    * Focus the cell corresponding to the given date.
    * @param {Date=} opt_date
    */
-  CalendarMonthViewCtrl.prototype.focus = function(opt_date) {
+  CalendarYearViewCtrl.prototype.focus = function(opt_date) {
+    return;
     var date = opt_date || this.selectedDate || this.today;
 
     var previousFocus = this.calendarElement.querySelector('.md-focus');
@@ -417,7 +390,7 @@
    * @param {Date} date
    * @return {Date}
    */
-  CalendarMonthViewCtrl.prototype.boundDateByMinAndMax = function(date) {
+  CalendarYearViewCtrl.prototype.boundDateByMinAndMax = function(date) {
     var boundDate = date;
     if (this.minDate && date < this.minDate) {
       boundDate = new Date(this.minDate.getTime());
@@ -433,17 +406,12 @@
   /**
    * Change the selected date in the calendar (ngModel value has already been changed).
    * @param {Date} date
-   * @param {boolean} opt_updateDisplay Changes the display date to match the selected date.
    */
-  CalendarMonthViewCtrl.prototype.changeSelectedDate = function(date, opt_updateDisplay) {
+  CalendarYearViewCtrl.prototype.changeSelectedDate = function(date) {
     var self = this;
     var previousSelectedDate = this.selectedDate;
     this.selectedDate = date;
-
-    var promise = opt_updateDisplay ? 
-        this.changeDisplayDate(date) :
-        this.$q.resolve();
-    promise.then(function() {
+    this.changeDisplayDate(date).then(function() {
 
       // Remove the selected class from the previously selected date, if any.
       if (previousSelectedDate) {
@@ -457,7 +425,7 @@
 
       // Apply the select class to the new selected date if it is set.
       if (date) {
-        var dateCell = document.getElementById(self.getDateId(date));
+        var dateCell = document.getElementById(self.getDateId(self.dateUtil.getFirstDateOfMonth(date)));
         if (dateCell) {
           dateCell.classList.add(SELECTED_DATE_CLASS);
           dateCell.setAttribute('aria-selected', 'true');
@@ -472,7 +440,7 @@
    * month, the displayed month will be transitioned.
    * @param {Date} date
    */
-  CalendarMonthViewCtrl.prototype.changeDisplayDate = function(date) {
+  CalendarYearViewCtrl.prototype.changeDisplayDate = function(date) {
     // Initialization is deferred until this function is called because we want to reflect
     // the starting value of ngModel.
     if (!this.isInitialized) {
@@ -503,7 +471,7 @@
    * @param {Date} date
    * @returns {angular.$q.Promise} The animation promise.
    */
-  CalendarMonthViewCtrl.prototype.animateDateChange = function(date) {
+  CalendarYearViewCtrl.prototype.animateDateChange = function(date) {
     this.scrollToMonth(date);
     return this.$q.when();
   };
@@ -514,7 +482,7 @@
    * Builds and appends a day-of-the-week header to the calendar.
    * This should only need to be called once during initialization.
    */
-  CalendarMonthViewCtrl.prototype.buildWeekHeader = function() {
+  CalendarYearViewCtrl.prototype.buildWeekHeader = function() {
     var firstDayOfWeek = this.dateLocale.firstDayOfWeek;
     var shortDays = this.dateLocale.shortDays;
 
@@ -529,18 +497,17 @@
   };
 
   /**
-   * Gets an identifier for a date unique to the calendar instance for internal
+   * Gets an identifier for a month unique to the calendar instance for internal
    * purposes. Not to be displayed.
    * @param {Date} date
    * @returns {string}
    */
-  CalendarMonthViewCtrl.prototype.getDateId = function(date) {
+  CalendarYearViewCtrl.prototype.getMonthId = function(date) {
     return [
       'md',
       this.calendarCtrl.id,
       date.getFullYear(),
-      date.getMonth(),
-      date.getDate()
+      date.getMonth()
     ].join('-');
   };
 })();

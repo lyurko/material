@@ -120,6 +120,7 @@ md-calendar {
 
 // The label above each month (containing the month name and the year, e.g. "Jun 2014").
 .md-calendar-month-label {
+  cursor: pointer;
   height: $md-calendar-cell-size;
   font-size: $md-calendar-month-label-font-size;
   font-weight: 500; // Roboto Medium

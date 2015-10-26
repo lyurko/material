@@ -194,6 +194,34 @@
             return results;
           }
         };
+      },
+
+      /**
+       * A helper to match the semantic values of 2 dates (not necessarily times).
+       * Replicates the functionality from mdDateUtil.isSameDay.
+       * @example expect(new Date(2015, 10, 1)).toBeSameDayAs(new Date(2015, 10, 1))
+       */
+      toBeSameDayAs: function() {
+        return {
+          compare: function(actual, expected) {
+            var results = {
+              pass: actual.getFullYear() === expected.getFullYear() &&
+                  actual.getMonth() === expected.getMonth() &&
+                  actual.getDate() === expected.getDate()
+            };
+
+            var negation = !results.pass ? '' : 'not ';
+
+            results.message = [
+              'Expected',
+              actual,
+              negation + 'to be the same day as',
+              expected
+            ].join(' ');
+
+            return results;
+          }
+        };
       }
 
     });
